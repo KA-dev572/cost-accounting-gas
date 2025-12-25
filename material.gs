@@ -1,10 +1,15 @@
-function calculateMaterialCost() {
+//ver 0.1.2 ライブラリ呼び出し用ラッパー: コードが分散しないよう一元管理してUI部分のみコンテナバインドに薄く実装
+function executeMaterialCalc() {
+  return calculateMaterialCost_();
+}
+
+function calculateMaterialCost_() {
   // ver1 材料の受払簿から月末に材料勘定の整理を行う（在庫評価方法は移動平均法）。出力は仕掛品勘定ファイルへ（とりあえずは全額直接費として扱う。製造間接費振替部分はver2以降。）
   // ファイル、シート名整理
-  let s = SpreadsheetApp.getActiveSpreadsheet();
-  let sIn = s.getActiveSheet();  //入力シート
-  let sOut = s.getSheetByName("材料勘定"); //出力シート
-  let sConfig = s.getSheetByName("材料名管理");
+  let ss = SpreadsheetApp.openById(materialID());  //configファイルでIDを管理：各自の環境に合わせる
+  let sIn = ss.getSheetByName("材料入力");  //入力シート
+  let sOut = ss.getSheetByName("材料勘定"); //出力シート
+  let sConfig = ss.getSheetByName("材料名管理");  //材料名の管理用シート。入力用シートの入力規則に使用
 
   //  入力シートの整理
   let sInHeaderRow = 1;
@@ -33,7 +38,7 @@ function calculateMaterialCost() {
   // Logger.log(contentRaw.length);
   //金額欄の関数除け
   let content = [];
-  for (let h=0; h<contentRaw.length-1; h++) {
+  for (let h=0; h<contentRaw.length; h++) {
     if (contentRaw[h][sInQtyColumn] != "") {
       content.push(contentRaw[h]); 
     }
@@ -93,5 +98,4 @@ function calculateMaterialCost() {
     monthlyLog.push([key, keyState.openingQty, keyState.openingAmount, keyState.inflowQty, keyState.inflowAmount, keyState.outflowQty, keyState.outflowAmount, keyState.currentQty, keyState.currentStorageAmount]);
   }
   sOut.getRange(1,1,monthlyLog.length, monthlyLog[0].length).setValues(monthlyLog);
-
 }
