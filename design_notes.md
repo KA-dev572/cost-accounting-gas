@@ -35,16 +35,16 @@
 - 将来的に在庫推移を可視化する場合、在庫数・在庫単価の列を追加する余地あり
 
 ## Githubファイル構成
-cost-accounting-gas/
-├─ README.md
-├─ docs/
-│   ├─ design_v1.md
-│   ├─ design_notes.md
-│   └─ roadmap.md
-├─ sheets/
-│   └─ template_v1.xlsx（or 設計メモ）
-├─ gas/
-│   ├─ material.gs
-│   ├─ labor.gs
-│   └─ overhead.gs
+cost-accounting-gas/  
+├─ README.md  
+├─ docs/  
+│   ├─ design_v1.md  
+│   ├─ design_notes.md  
+│   └─ roadmap.md  
+├─ sheets/  
+│   └─ template_v1.xlsx（or 設計メモ）  
+├─ gas/  
+│   ├─ material.gs  
+│   ├─ labor.gs  
+│   └─ overhead.gs  
 
