@@ -1,4 +1,4 @@
-# cost-accounting-gas
+# 原価計算フロー再現ツール　cost-accounting-gas
 属人化を排した原価計算フローの自動化
 
 ## 目的
