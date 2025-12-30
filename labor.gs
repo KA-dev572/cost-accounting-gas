@@ -95,7 +95,9 @@ function confirmLaborCost_ (targetMonth) {
   } else if (decision.type === "none") {
     alertNone_ (targetMonth);
   } else if (decision.type === "ok") {
-    confirmAndSend_(aggregationTable, decision)
+    confirmAndSend_(aggregationTable, decision);
+    saveAggregationTable_(laborID(),aggregationTable);  //製造間接費から流用
+    alertSuccess_ (targetMonth);  //製造間接費から流用
   }
 }
 
