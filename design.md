@@ -92,17 +92,17 @@
 
 - 検討
   - 集計フロー(共通関数: flowCalc_(ctx))
-    - 入力：入力シート読み取り(勘定個別関数: ctx_loadInput_(targetMonth))
-    - 処理：出力用二次元配列作成(勘定個別関数: ctx_transfom_())
-    - 出力：出力用シートに書き出し(勘定個別関数: ctx_fillInSs_())
+    - 入力：入力シート読み取り(勘定個別関数: ctx.loadInput_(targetMonth))
+    - 処理：出力用二次元配列作成(勘定個別関数: ctx.aggregation_())
+    - 出力：出力用シートに書き出し(勘定個別関数: ctx.fillInSs_())
   - 確認フロー(共通関数: flowCnfm_(ctx))
-    - 入力：出力シートを読み取り
+    - 入力：出力シートを読み取り(勘定個別関数: ctx.loadOutput_(targetMonth))
     - 処理：
-      - confirmation
-      - 次工程へ送信する配列を作成
+      - confirmation(勘定個別関数: ctx.applyConfirmation_())
+      - 次工程へ送信する配列を作成(勘定個別関数: ctx.contentToSend_())
     - 出力：
-      - 出力用シートに書き出し
-      - 次工程に送信
+      - 出力用シートを更新(勘定個別関数: ctx.refreshSs_())
+      - 次工程に送信(勘定個別関数: ctx.sendToNext_())
  
 
 ## 共通管理仕様(ver1)
