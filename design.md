@@ -1,4 +1,4 @@
-# 仕様(ver0.3:製造間接費検討段階)
+# 仕様(ver1:仕掛品に集約まで)
 ## 材料勘定(ver0.1で実装)
 - 基本的発想（ver0~1）
   - 取引ごとに入力シートに記帳→月末一括処理
@@ -67,30 +67,13 @@
     - 製造間接費担当者は労務費（、経費）の当月がそろったら集計ボタン→確認後仕掛品勘定へ飛ばす
       - 材料費の方も仕掛品勘定に飛ばす仕組みを追加する必要がある。
 
-## 費目間処理形式の統一(ver0.4検討)
+## 仕掛品勘定(v1)
+- v1ではここに集約するところまで。
+
+## 費目間処理形式の統一(ver1)
 - 目的
   - 各勘定に処理方式の同型性とシート構成等による個別性が存在することを前提に、管理しやすく可読性の高い処理を行う。
 - 構成
-  - executeXxx()        // UI・トリガー用  
-    - └─ flow_xxx_()     // 処理段階（集計・確認など）  
-      - └─ ctx.xxx     // 勘定差分（定数）  
-        - └─ labor_xxx_() / material_xxx_()
-- 例
-  1. configで個別勘定差分の内容を指定
-  - const LABOR = {
-    - loadRows: labor_loadRows_,  
-    - applyConfirm: labor_applyConfirm_  
-  - };
-  2. flow_xxx_()は引数に勘定定数をとって差分ごとの関数を呼び出す 
-  - function executeLaborConfirm() {  
-    - confirmFlow_(LABOR);  
-  - }    
-  - function confirmFlow_(ctx) {  
-    - const rows = ctx.loadRows();  
-    - ctx.applyConfirm(rows);  
-  - }
-
-- 検討
   - 集計フロー(共通関数: flowCalc_(ctx))
     - 入力：入力シート読み取り(勘定個別関数: ctx.loadInput_(targetMonth))
     - 処理：出力用二次元配列作成(勘定個別関数: ctx.aggregation_())
@@ -103,6 +86,11 @@
     - 出力：
       - 出力用シートを更新(勘定個別関数: ctx.refreshSs_())
       - 次工程に送信(勘定個別関数: ctx.sendToNext_())
+-  例
+  -  executeXxx()        // UI・トリガー用  
+    - └─ flow_xxx_()     // 処理段階（集計・確認など）  
+      - └─ ctx.xxx     // 勘定差分（定数）  
+        - └─ labor_xxx_() / material_xxx_()
  
 
 ## 共通管理仕様(ver1)
