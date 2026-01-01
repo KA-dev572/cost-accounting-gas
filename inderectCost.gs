@@ -1,138 +1,100 @@
-function executeIdc() {
-  return calcIdc_();}
-
-function calcIdc_() {
-  const ids = idcId();
-  // 1 入力読み取り
-  // 1.1当月情報取得  2025-12
-  const targetMonth = getTargetMonth_(ids);
-  // 1.2費用入力シート取得  [[2025-12, 間接労務費, 1650.0]] //入力シートで対象月列を「書式なしテキスト」にしておくこと
-  const table = loadAggregationTable_(ids, "input");
-  //　1.3対象月抽出  [{idx=0.0, row=[2025-12, 間接労務費, 1650.0]}]
-  const rows = filterByMonth_(table, targetMonth);  //labor.gsの使いまわし
-
-  // 2 処理 {amount=1650.0, targetMonth=2025-12, status=ready, sendTo=仕掛品}
-  let total = monthlySum_ (rows, fromIdcTo_().name);
-
-  // 3 出力
-  let print = [[total.targetMonth, total.timestamp, total.status, total.amount]];
-  const outputSheet = outputSheet_(ids).ss;
-  outputSheet.getRange(outputSheet.getLastRow()+1, 1, print.length, print[0].length).setValues(print);
-  //仮; デバッグ用
-  // return print;
+// 2026-01-01 ver1 done
+//集計フロー起動
+function executeIdcCalc() {
+  return flowCalc_(idc);
 }
+//集計系サブ関数群：これらを順次呼び出す
+function idc_loadInput_(targetMonth) {
+  let headerRow = inputSheet_(idc).headerRow;
+  let ss = inputSheet_(idc).ss;
 
-//確認処理用
-function executeIDCConfirmation(){
-  return idcConfirmation_();
-}
-function idcConfirmation_() {
-  const ids = idcId();
-  const targetMonth = getTargetMonth_(ids);
-  // ① データ取得
-  const table = loadAggregationTable_(ids, "output");
-  // ② 対象月抽出
-  const rows = filterByMonth_(table, targetMonth);
-  // ③ 確定可否判定
-  const decision = pickLatestUnconfirmed_(rows);
-
-  if (decision.type === "alreadyConfirmed") {
-    alertAlreadyConfirmed_(targetMonth);  // laborから
-  } else if (decision.type === "none") {
-    alertNone_ (targetMonth); //laborから
-  } else if (decision.type === "ok") {
-    // ④ 状態遷移
-    applyConfirmation_(table, decision);
-    // ⑤ 他シート送信
-    sendToWIP_(ids,fromIdcTo_(),decision);
-    // ⑥ 書き戻し
-    saveAggregationTable_(ids, table);
-    alertSuccess_(targetMonth);
-  }
-  // デバッグ用
-  // return {targetMonth, table, rows, decision};
-}
-
-//サブ関数群
-//シートconfig系
-function ss_(file, sheet){
-  const ss = SpreadsheetApp.openById(file).getSheetById(sheet);
-  return ss;
-}
-function inputSheet_ (obj) {
-  const inputSheet = ss_(obj.fileId, obj.inputSheetId);
-  return {headerRow: 2, ss: inputSheet};
-}
-function outputSheet_(obj) {
-  const outputSheet = ss_(obj.fileId, obj.outputSheetId);
-  return {headerRow: 1, ss: outputSheet};
-}
-function fromIdcTo_ () {
-  return wipId();
-}
-
-//集計処理系
-function getTargetMonth_(obj){
-  const targetMonth = inputSheet_(obj).ss.getRange(1,2).getValue();  //入力箇所指定B1セル
-  return targetMonth;
-}
-
-function loadAggregationTable_(obj, whichSheet) {
-  let headerRow = 0;
-  let ss = null;
-  if (whichSheet == "input") {
-    headerRow = inputSheet_(obj).headerRow;
-    ss = inputSheet_(obj).ss;
-  } else if (whichSheet == "output") {
-    headerRow = outputSheet_(obj).headerRow;
-    ss = outputSheet_(obj).ss;
-  }
-  const table = ss.getRange(headerRow+1, 1, ss.getLastRow()-headerRow, ss.getLastColumn()).getValues();
+  let rows = ss.getRange(headerRow+1, 1, ss.getLastRow()-headerRow, ss.getLastColumn()).getValues();
+  // Logger.log(rows);
+  //  [[2025-12, 間接労務費, 1650.0]]
+  let table = filterByMonth_(rows,targetMonth);
+  // Logger.log(table);
+  //	[{row=[2025-12, 間接労務費, 1650.0], idx=0.0}]
   return table;
 }
-
-function monthlySum_(rows, next){
-  //[{idx=0.0, row=[2025-12, 間接労務費, 1650.0]}, {...}]この形式のものを集計
-  //とりあえずは1財生産なので製品ごと配賦は考えない
-  let sums = {targetMonth:rows[0].row[0],
+function idc_aggregation_(table, targetMonth) {
+  let aggregation = {targetMonth:targetMonth,
               timestamp: new Date(),
-              sendTo: next,
               amount: 0,
               status: "ready"  
   };
-  for (element of rows){
-    sums.amount += Number(element.row[2]);
+  for (element of table){
+    aggregation.amount += Number(element.row[2]);
   }
-  return sums;
+  Logger.log(aggregation);
+  // {amount=1650.0, targetMonth=2025-12, status=ready, timestamp=Thu Jan 01 12:40:55 GMT+09:00 2026}
+  return aggregation;
+}
+function idc_fillInSs_(aggregation) {
+  let outcome = [[aggregation.targetMonth, aggregation.timestamp, aggregation.status, aggregation.amount]];
+  let outputSheet = outputSheet_(idc).ss;
+  outputSheet.getRange(outputSheet.getLastRow()+1, 1, outcome.length, outcome[0].length).setValues(outcome);
+  return;
 }
 
-//確認処理系
-function applyConfirmation_ (table, decision) {
-  const idx = Number(decision.target.idx);
-  table[idx][2] = "confirmed";
+
+//確認処理フロー実行
+function executeIDCConfirmation(){
+  return flowCnfm_(idc);
+}
+//確認フローサブ関数：これらを順次呼び出す
+function idc_loadOutput_(targetMonth) {
+  let headerRow = outputSheet_(idc).headerRow;
+  let ss = outputSheet_(idc).ss;
+  let temp_table = ss.getRange(headerRow+1, 1, ss.getLastRow()-headerRow, ss.getLastColumn()).getValues();
+  let table = filterByMonth_(temp_table, targetMonth);
+  Logger.log(table);
+  // [{row=[2025-12, Wed Dec 31 01:57:03 GMT+09:00 2025, ready, 1650.0], idx=0.0}, {row=[2025-12, Thu Jan 01 12:47:34 GMT+09:00 2026, ready, 1650.0], idx=1.0}]
   return table;
 }
-function sendToWIP_(ids, next, decision) {
-    const contentToSend = [[
-    decision.target.row[0],
-    ids.name,
-    decision.target.row[3]
-  ]];
-  // return contentToSend;
-  const ss1 = SpreadsheetApp
-    .openById(next.fileId)
-    .getSheetById(next.inputSheetId);
-  ss1.getRange(ss1.getLastRow()+1,1,contentToSend.length,contentToSend[0].length).setValues(contentToSend);
+function idc_applyConfirmation_(table, targetMonth) {
+  let decision = pickLatestUnconfirmed_(table);
+  // {target={idx=1.0, row=[2025-12, Thu Jan 01 12:47:34 GMT+09:00 2026, ready, 1650.0]}, type=ok}
+  if (decision.type === "ok") {
+    decision.target.row[2]="confirmed";
+  } else if (decision.type ==="alreadyConfirmed") {
+    alertAlreadyConfirmed_(targetMonth);
+  } else if (decision.type === "none") {
+    alertNone_(targetMonth);
+  }
+  Logger.log(decision);
+  //{target={row=[2025-12, Thu Jan 01 12:47:34 GMT+09:00 2026, confirmed, 1650.0], idx=1.0}, type=ok}
+  return decision;
 }
-function saveAggregationTable_(obj, table) {
-  const ss = outputSheet_(obj).ss;
-  const headerRow = outputSheet_(obj).headerRow;
-  ss.getRange(headerRow+1, 1, table.length, table[0].length).setValues(table);
+function idc_contentToSend_ (decision) {
+  let content = [];
+  if (decision.type === "ok") {
+    let row = decision.target.row;
+    content.push([row[0],idc.name,row[3]]);
+  }
+  Logger.log(content);
+  //	[[2025-12, 製造間接費, 1650.0]]
+  return content;
 }
-function alertSuccess_(targetMonth) {
-  SpreadsheetApp.getUi().alert(`${targetMonth}分の集計額を次工程へ送信しました。`)
+function idc_refreshSs_ (decision) {
+  if (decision.type === "ok") {
+    let ss = outputSheet_(idc).ss;
+    let headerRow = outputSheet_(idc).headerRow;
+    let target = decision.target;
+    let idx = Number(target.idx);
+    ss.getRange(headerRow+idx+1, 3).setValue(target.row[2]);
+    Logger.log("refreshing output sheet has been done.");
+  } else {
+    Logger.log("nothing to be refreshed.");
+  }
 }
-
-function dev () {
-  Logger.log();
+function idc_sendToNext_ (content, targetMonth) {
+  if (content.length != 0) {
+    let next = wip;
+    let ss = inputSheet_(next).ss;
+    ss.getRange(ss.getLastRow()+1,1,content.length,content[0].length).setValues(content);
+    Logger.log("sending content to next step has been done.");
+    alertSuccess_(targetMonth);
+  } else {
+    Logger.log("nothing to be sent.")
+  }
 }
