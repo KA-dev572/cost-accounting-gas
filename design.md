@@ -71,29 +71,31 @@
 - 目的
   - 各勘定に処理方式の同型性とシート構成等による個別性が存在することを前提に、管理しやすく可読性の高い処理を行う。
 - 構成
-executeXxx()        // UI・トリガー用  
- └─ flow_xxx_()     // 処理段階（集計・確認など）  
-     └─ ctx.xxx     // 勘定差分（定数）  
-         └─ labor_xxx_() / material_xxx_()
-- 例  
-const LABOR = {  
-  loadRows: labor_loadRows_,  
-  applyConfirm: labor_applyConfirm_  
-};  
-function executeLaborConfirm() {  
-  confirmFlow_(LABOR);  
-}    
-function confirmFlow_(ctx) {  
-  const rows = ctx.loadRows();  
-  ctx.applyConfirm(rows);  
-}
+  - executeXxx()        // UI・トリガー用  
+    - └─ flow_xxx_()     // 処理段階（集計・確認など）  
+      - └─ ctx.xxx     // 勘定差分（定数）  
+        - └─ labor_xxx_() / material_xxx_()
+- 例
+  1. configで個別勘定差分の内容を指定
+  - const LABOR = {
+    - loadRows: labor_loadRows_,  
+    - applyConfirm: labor_applyConfirm_  
+  - };
+  2. flow_xxx_()は引数に勘定定数をとって差分ごとの関数を呼び出す 
+  - function executeLaborConfirm() {  
+    - confirmFlow_(LABOR);  
+  - }    
+  - function confirmFlow_(ctx) {  
+    - const rows = ctx.loadRows();  
+    - ctx.applyConfirm(rows);  
+  - }
 
 - 検討
-  - 集計フロー
+  - 集計フロー(共通関数: flow_calc_(ctx))
     - 入力：入力シート読み取り
     - 処理：出力用二次元配列作成
     - 出力：出力用シートに書き出し
-  - 確認フロー
+  - 確認フロー(共通関数: flow_cnfm?_(ctx))
     - 入力：出力シートを読み取り
     - 処理：
       - confirmation
