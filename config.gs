@@ -1,5 +1,5 @@
 // 各自の環境に合わせて設定
-// v1時点 2026-01-01
+// v1.1時点 2026-01-02
 const material = {
   //材料勘定ファイルのID
   name: "材料",
@@ -69,6 +69,7 @@ const wip = {
     fileId: "YOUR_ID",
     inputSheetId: NUMBER,
     outputSheetId: NUMBER,
+    configSheetId: NUMBER,
     //以下個別関数の呼び出し用
     //集計フロー用
     loadInput: wip_loadInput_,  //集計シートから読み込み
@@ -80,4 +81,24 @@ const wip = {
     // contentToSend: wip_contentToSend_,
     // refreshSs: wip_refreshSs_,
     // sendToNext: wip_sendToNext_
+};
+
+const product = {
+  //製品勘定ファイル等
+  name: "製品",
+  fileId: "YOUR_ID",
+  inputSheetId: NUMBER,
+  outputSheetId: NUMBER,
+  configSheetId: NUMBER,
+  //以下個別関数の呼び出し用
+  //集計フロー用
+  loadInput: product_loadInput_,  //集計シートから読み込み
+  aggregation: product_aggregation_,
+  fllInSs: product_fillInSs_,
+  //確認フロー用: 簡易P/L用？
+  // loadOutput: product_loadOutput_,
+  // applyConfirmation: product_applyConfirmation_,
+  // contentToSend: product_contentToSend_,
+  // refreshSs: product_refreshSs_,
+  // sendToNext: product_sendToNext_
 };
