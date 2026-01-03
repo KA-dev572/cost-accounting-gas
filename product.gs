@@ -1,5 +1,5 @@
 /**
- * v1.1 製品勘定まで 2026-01-02
+ * v1.2 損益計算書まで 2026-01-03
  */
 
 function executeProductCalc() {
@@ -82,4 +82,72 @@ function product_fillInSs_(aggregation) {
   let outputSheet = outputSheet_(product).ss;
   outputSheet.getRange(outputSheet.getLastRow()+1, 1, outcome.length, outcome[0].length).setValues(outcome);
   Logger.log("product cost has been calculated.");
+}
+
+
+// 確認フロー v1.2追加
+function executeProductConfirmation () {
+  return flowCnfm_(product);
+}
+// 確認サブフロー：これらを順次呼ぶ
+function product_loadOutput_ (targetMonth) {
+  let headerRow = outputSheet_(product).headerRow;
+  let ss = outputSheet_(product).ss;
+  let temp_table = ss.getRange(headerRow+1, 1, ss.getLastRow()-headerRow, ss.getLastColumn()).getValues();
+  let table = filterByMonth_(temp_table, targetMonth);
+  Logger.log(table);
+  // [{idx=0.0, row=[2025-12, Mon Dec 29 23:58:40 GMT+09:00 2025, ready, 材料A, 100.0, 10000.0, 100.0, 8000.0, -100.0, -9000.0, 100.0, 9000.0]},...]
+  return table;
+}
+function product_applyConfirmation_ (table, targetMonth) {
+  let decision = pickLatestUnconfirmed_(table); 
+  // ↑2財への拡張があるのでここはこのままではいけない。v2では材料ごとにループしてconfirmしなければならない。
+  if (decision.type === "ok") {
+    decision.target.row[2]="confirmed";
+  } else if (decision.type ==="alreadyConfirmed") {
+    alertAlreadyConfirmed_(targetMonth);
+  } else if (decision.type === "none") {
+    alertNone_(targetMonth);
+  }
+  Logger.log(decision);
+  // 		{target={idx=1.0, row=[2025-12, Thu Jan 01 20:15:40 GMT+09:00 2026, confirmed, 材料A, 100.0, 10000.0, 100.0, 8000.0, -100.0, -9000.0, 100.0, 9000.0]}, type=ok}
+  return decision;
+}
+function product_contentToSend_ (decision) {
+  let content = {};
+  if (decision.type === "ok") {
+    let row = decision.target.row;
+    content.direct = [row[0],row[1], row[3],Number(row[12])]; //[対象月、timestamp,製品, 販売原価]
+  }
+  Logger.log(content);
+  //	{direct=[2025-12, 直接材料, 9000.0]}
+  return content;
+}
+function product_refreshSs_ (decision) {
+  if (decision.type === "ok") {
+    let ss = outputSheet_(product).ss;
+    let headerRow = outputSheet_(product).headerRow;
+    let target = decision.target;
+    let idx = Number(target.idx);
+    ss.getRange(headerRow+idx+1, 3).setValue(target.row[2]);
+    Logger.log("refreshing output sheet has been done.");
+  } else {
+    Logger.log("nothing to be refreshed.");
+  }
+}
+function product_sendToNext_ (content, targetMonth) {
+  if (Object.keys(content).length != 0) {
+    let dirNext = pl;
+    // let idrNext = idc;
+    let dirSs = ss_(pl.fileId, pl.unitcostSheetId);
+    // let idrSs = inputSheet_(idrNext).ss;
+    let dc = [content.direct];
+    let ic = [content.indirect];
+    dirSs.getRange(dirSs.getLastRow()+1,1,dc.length,dc[0].length).setValues(dc);
+    // idrSs.getRange(idrSs.getLastRow()+1,1,ic.length,ic[0].length).setValues(ic);
+    Logger.log("sending content to next step has been done.");
+    alertSuccess_(targetMonth);
+  } else {
+    Logger.log("nothing to be sent.")
+  }
 }
