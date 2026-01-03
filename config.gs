@@ -1,5 +1,5 @@
 // 各自の環境に合わせて設定
-// v1.1時点 2026-01-02
+// v1.2時点 2026-01-03
 const material = {
   //材料勘定ファイルのID
   name: "材料",
@@ -95,10 +95,32 @@ const product = {
   loadInput: product_loadInput_,  //集計シートから読み込み
   aggregation: product_aggregation_,
   fllInSs: product_fillInSs_,
-  //確認フロー用: 簡易P/L用？
-  // loadOutput: product_loadOutput_,
-  // applyConfirmation: product_applyConfirmation_,
-  // contentToSend: product_contentToSend_,
-  // refreshSs: product_refreshSs_,
-  // sendToNext: product_sendToNext_
+  //確認フロー用: 簡易P/L用
+  loadOutput: product_loadOutput_,
+  applyConfirmation: product_applyConfirmation_,
+  contentToSend: product_contentToSend_,
+  refreshSs: product_refreshSs_,
+  sendToNext: product_sendToNext_
 };
+
+const pl = {
+  //損益勘定ファイル等
+  name: "損益計算書",
+  fileId: "YOUR_ID",
+  inputSheetId: NUMBER,
+  outputSheetId: NUMBER,
+  configSheetId: NUMBER,
+  plSheetId: NUMBER,
+  unitcostSheetId: NUMBER,
+  //以下個別関数の呼び出し用
+  //集計フロー用
+  loadInput: pl_loadInput_,
+  aggregation: pl_aggregation_,
+  fllInSs: pl_fillInSs_,
+  //確認フロー用:
+  loadOutput: pl_loadOutput_,
+  applyConfirmation: pl_applyConfirmation_,
+  contentToSend: pl_contentToSend_,
+  refreshSs: pl_refreshSs_,
+  sendToNext: pl_sendToNext_
+}
