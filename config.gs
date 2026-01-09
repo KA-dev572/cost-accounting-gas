@@ -1,5 +1,5 @@
 // 各自の環境に合わせて設定
-// v1.2時点 2026-01-03
+// v1.3時点 2026-01-09
 const material = {
   //材料勘定ファイルのID
   name: "材料",
@@ -9,6 +9,7 @@ const material = {
   inputSheetId: NUMBER,
   outputSheetId: NUMBER,
   configSheetId: NUMBER,
+  logSheetId: NUMBER,
   //以下個別関数の呼び出し用
   //集計フロー用
   loadInput: material_loadInput_,  //集計シートから読み込み
@@ -31,6 +32,7 @@ const labor = {
   inputSheetId: NUMBER,
   outputSheetId: NUMBER,
   configSheetId: NUMBER,
+  logSheetId: NUMBER,
   //以下個別関数の呼び出し用
   //集計フロー用
   loadInput: labar_loadInput_,  //集計シートから読み込み
@@ -50,6 +52,7 @@ const idc = {
   fileId: "YOUR_ID",
   inputSheetId: NUMBER,
   outputSheetId: NUMBER,
+  logSheetId: NUMBER,
   //以下個別関数の呼び出し用
   //集計フロー用
   loadInput: idc_loadInput_,  //集計シートから読み込み
@@ -70,6 +73,7 @@ const wip = {
     inputSheetId: NUMBER,
     outputSheetId: NUMBER,
     configSheetId: NUMBER,
+    logSheetId: NUMBER,
     //以下個別関数の呼び出し用
     //集計フロー用
     loadInput: wip_loadInput_,  //集計シートから読み込み
@@ -90,6 +94,7 @@ const product = {
   inputSheetId: NUMBER,
   outputSheetId: NUMBER,
   configSheetId: NUMBER,
+  logSheetId: NUMBER,
   //以下個別関数の呼び出し用
   //集計フロー用
   loadInput: product_loadInput_,  //集計シートから読み込み
@@ -112,6 +117,7 @@ const pl = {
   configSheetId: NUMBER,
   plSheetId: NUMBER,
   unitcostSheetId: NUMBER,
+  logSheetId: NUMBER,
   //以下個別関数の呼び出し用
   //集計フロー用
   loadInput: pl_loadInput_,
