@@ -1,4 +1,4 @@
-//共通して使用する関数。 v1 2026-01-01
+//共通して使用する関数。 v1.3 2026-01-09 エラーの明示追加
 // 汎用 各勘定でinputssとoutputssが共通していることが前提、そうでなくなれば個別関数へ
 function ss_(file, sheet){
   const ss = SpreadsheetApp.openById(file).getSheetById(sheet);
@@ -26,22 +26,35 @@ function filterByMonth_(table, targetMonth) {
 // 共通フロー指定: ctx=勘定を引数に
 // 集計フロー
 function flowCalc_(ctx) {
-  let targetMonth = getTargetMonth_(ctx);
-  let table = ctx.loadInput(targetMonth);
-  let aggregation = ctx.aggregation(table, targetMonth);
-  ctx.fllInSs(aggregation);
+  try {
+    let targetMonth = getTargetMonth_(ctx);
+    let table = ctx.loadInput(targetMonth);
+    let aggregation = ctx.aggregation(table, targetMonth);
+    ctx.fllInSs(aggregation);
+  } catch (e) {
+    logError_ ("calc", ctx, e);
+    throw e;
+  }
 }
 //　確認フロー
 function flowCnfm_(ctx) {
-  let targetMonth = getTargetMonth_(ctx);
-  let table = ctx.loadOutput(targetMonth);
-  let decision = ctx.applyConfirmation(table, targetMonth);
-  let content = ctx.contentToSend(decision);
-  ctx.refreshSs(decision);
-  ctx.sendToNext(content, targetMonth);
-  // return content;
+  try {
+    let targetMonth = getTargetMonth_(ctx);
+    let table = ctx.loadOutput(targetMonth);
+    let decision = ctx.applyConfirmation(table, targetMonth);
+    let content = ctx.contentToSend(decision);
+    ctx.refreshSs(decision);
+    ctx.sendToNext(content, targetMonth);
+  } catch (e) {
+    logError_ ("confirm", ctx, e)
+  }
 }
-
+// エラー処理 v1.3 2026-01-09追加
+function logError_(level, ctx, e) {
+  const ss = ss_(ctx.fileId, ctx.logSheetId);
+  const newRow = [new Date(), level, ctx.name, e];
+  ss.appendRow(newRow);
+}
 
 // 確認作業サブフロー内共通項目（製造間接費基準：他でカスタマイズが必要ならこれは一旦製造間接費に逃して）
 // 前提：タイムスタンプが[2]要素目にあること。
